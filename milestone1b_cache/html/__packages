@@ -1,0 +1,6 @@
+base
+NLP
+RColorBrewer
+stringr
+tm
+wordcloud

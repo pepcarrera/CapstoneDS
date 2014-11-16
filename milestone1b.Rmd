@@ -1,0 +1,129 @@
+#Milestone 1 Report
+
+##Summary
+The data is provided for the Data Science Capstone course: https://class.coursera.org/dsscapstone-002
+
+The intent is to perform data exploration on the provided data from this site: www.corpora.heliohost.org
+
+Overall you will find data that seems to concentrate on top used phrases and words, while showing some dispartiy in data based on the sorurce.  Twitter and blogs for instane tend to say "I" much more so than News.
+
+##Sampling & Processing of Data
+The data is randomly selected by running via a binom function, grabbing 1% of each of the 3 data sets.  This results in files with the following number of lines (Twitter, Blogs, and News):
+
+```{r, echo=FALSE, cache=TRUE, warning=FALSE}
+library("tm")
+library("stringr")
+twitterFile <- "./en/en_US.twitter.sam.txt"
+twitterSampleFile <- "./final/en_US/en_US.twitter.txt"
+blogsFile <- "./en/en_US.blogs.sam.txt"
+blogsSampleFile <- "./final/en_US/en_US.blogs.txt"
+newsFile <- "./en/en_US.news.sam.txt"
+newsSampleFile <- "./final/en_US/en_US.news.txt"
+
+# keep "r" by removing it from stopwords
+myStopwords <- c(stopwords('english'), "available", "via")
+myStopwords <- myStopwords[-which(myStopwords == "r")]
+
+set.seed(3345)
+sampleFile <- function(infile,outfile,header=T) {
+        ci <- file(infile,"r")
+        co <- file(outfile,"w")
+        if (header) {
+                hdr <- readLines(ci,n=1)
+                writeLines(hdr,co)
+        }
+        recnum = 0
+        numout = 0
+        while (TRUE) {
+                inrec <- readLines(ci,n=1, encoding="UTF-8", skipNul=TRUE)
+                if (length(inrec) == 0) { # end of file?
+                        close(co) 
+                        return(numout)
+                }
+                recnum <- recnum + 1
+                if (rbinom(1,1,p=.01) == 1) {
+                        numout <- numout + 1
+                        # remove special characters
+                        #inrec <- str_replace_all(inrec, "[^[:alnum:]]", " ")
+                        # move to lower case
+                        inrec <- tolower(inrec)
+                        # remove punctuation
+                        inrec <- removePunctuation(inrec)
+                        # remove numbers
+                        inrec <- removeNumbers(inrec)
+                        # remove stopwords
+                        inrec <- removeWords(inrec, stopwords(myStopwords))
+                        writeLines(inrec,co)
+                }
+        }
+}
+
+sampleFile(twitterSampleFile, twitterFile)
+sampleFile(blogsSampleFile, blogsFile)
+sampleFile(newsSampleFile, newsFile)
+```
+
+#Data Exploration
+
+##Word Cloud
+You can use a word cloud as a nice visual way of seeing the frequency of the words in the corpus
+```{r, echo=FALSE, cache=TRUE, warning=FALSE}
+directory <- DirSource("./en", "UTF-8", mode="text")
+enUsFiles <- Corpus(directory,readerControl=list(reader=readPlain))
+myTDM <- TermDocumentMatrix(enUsFiles, control = list(minWordLength = 1))
+m = as.matrix(myTDM)
+v = sort(rowSums(m), decreasing = TRUE)
+library(wordcloud)
+set.seed(4363)
+wordcloud(names(v), v, min.freq = 50)
+```
+
+##Term Document Matrix
+If we stem the corpus and take a look at TDM, we can see that there is less overlap of words accross the documents than you would think and you can see the top 10 words
+```{r, echo=FALSE}
+library("tm")
+enUsFilesStem <- tm_map(enUsFiles, stemDocument, language="english")
+myTDMStem <- TermDocumentMatrix(enUsFilesStem, control = list(minWordLength = 1))
+mStem = as.matrix(myTDMStem)
+vStem = sort(rowSums(mStem), decreasing = TRUE)
+myTDMStem
+head(vStem, 10)
+```
+
+##Barplot showing top 25 words and the amount of times that they show up in the corpus
+```{r, echo=FALSE, warning=FALSE}
+library(ggplot2)
+qplot(head(names(vStem), 25), head(vStem, 25))
+barplot(vStem)
+```
+
+##N-gram Tokenization
+The tables below show the top 2 and 3-gram frequncies by document
+
+Twitter:
+```{r, echo=FALSE, warning=FALSE}
+library(RWeka)
+bitwitterGrams <- NGramTokenizer(readLines(twitterFile), Weka_control(min = 2, max = 2))
+head(sort(table(bitwitterGrams), decreasing=TRUE), 20)
+twitterGrams <- NGramTokenizer(readLines(twitterFile), Weka_control(min = 3, max = 3))
+head(sort(table(twitterGrams), decreasing=TRUE), 20)
+```
+
+Blogs:
+```{r, echo=FALSE}
+biblogsGrams <- NGramTokenizer(readLines(blogsFile), Weka_control(min = 2, max = 2))
+head(sort(table(biblogsGrams), decreasing=TRUE), 20)
+blogsGrams <- NGramTokenizer(readLines(blogsFile), Weka_control(min = 3, max = 3))
+head(sort(table(blogsGrams), decreasing=TRUE), 20)
+```
+
+News:
+```{r, echo=FALSE}
+binewsGrams <- NGramTokenizer(readLines(newsFile), Weka_control(min = 2, max = 2))
+head(sort(table(binewsGrams), decreasing=TRUE), 20)
+newsGrams <- NGramTokenizer(readLines(newsFile), Weka_control(min = 3, max = 3))
+head(sort(table(newsGrams), decreasing=TRUE), 20)
+```
+
+##Conclusion
+The data overall shows that purging posseive semi-colons would be detrimnal to prediction, while also perhaps showing that up to 3 N-grams would be appropriate.  We will refine this approach as we move to the model phase.

@@ -1,0 +1,75 @@
+
+Loading Required Libraries
+```{r}
+library("tm")
+```
+
+Sampling & Processing of Data
+
+```{r}
+twitterFile <- "./en/en_US.twitter.sam.txt"
+twitterSampleFile <- "./final/en_US/en_US.twitter.txt"
+blogsFile <- "./en/en_US.blogs.sam.txt"
+blogsSampleFile <- "./final/en_US/en_US.blogs.txt"
+newsFile <- "./en/en_US.news.sam.txt"
+newsSampleFile <- "./final/en_US/en_US.news.txt"
+
+sampleFile <- function(infile,outfile,header=T) {
+        ci <- file(infile,"r")
+        co <- file(outfile,"w")
+        if (header) {
+                hdr <- readLines(ci,n=1)
+                writeLines(hdr,co)
+        }
+        recnum = 0
+        numout = 0
+        while (TRUE) {
+                inrec <- readLines(ci,n=1)
+                if (length(inrec) == 0) { # end of file?
+                        close(co) 
+                        return(numout)
+                }
+                recnum <- recnum + 1
+                if (rbinom(1,1,p=.025) == 1) {
+                        numout <- numout + 1
+                        writeLines(inrec,co)
+                }
+        }
+}
+
+sampleFile(twitterSampleFile, twitterFile)
+sampleFile(blogsSampleFile, blogsFile)
+sampleFile(newsSampleFile, newsFile)
+
+
+processFile <- function(file, enc="UTF-8" ){
+        file <- readLines(file,encoding=enc)
+        fileProcessed <- tm::stripWhitespace( file )
+        fileProcessed <- tolower( file )
+        fileProcessed <- tm::removeWords( file, stopwords( 'english' ) )
+        fileProcessed <- tm::removePunctuation( file )
+        fileProcessed <- removeNumbers( file )
+
+        
+#        fileGrams <- NGramTokenizer(fileProcessed, Weka_control(min = 2, max = 3, delimiters = " \\r\\n\\t.,;:\"()?!"))
+        return(fileProcessed)
+}
+
+
+twitterEnUs <- processFile(twitterSampleFile)
+blogsEnUs <- processFile(blogsSampleFile)
+newsEnUs <- processFile(newsSampleFile)
+```
+
+Data Exploration
+```{r}
+enUsFiles <- c(twitterEnUs, blogsEnUs, newsEnUs)
+directory <- DirSource("./en", "UTF-8")
+myCorpus <- Corpus(enUsFiles,readerControl=list(reader=readPlain))
+myTDM <- TermDocumentMatrix(enUsFiles, control = list(minWordLength = 1))
+m = as.matrix(myTDM)
+v = sort(rowSums(m), decreasing = TRUE)
+library(wordcloud)
+set.seed(4363)
+wordcloud(names(v), v, min.freq = 50)
+```
