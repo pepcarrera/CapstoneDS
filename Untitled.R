@@ -15,6 +15,7 @@ head(y)
 #library(RWekajars)
 #enUsFiles <- tm_map(enUsFiles, stemDocument, language="english")
 #enUsFiles <- tm_map(enUsFiles, stemCompletion, dictionary=dictCorpus, mc.cores=1)
+
 ```
 
 
