@@ -78,3 +78,27 @@ colnames(fourFreq) <- c('w1', 'w2', 'w3', 'w4')
 
 
 threeFreq[with(threeFreq, w1 == "must" & w2 == "be"),]
+
+
+unigramTwitter <- NGramTokenizer(sample, Weka_control(min = 1, max = 1))
+bigramTwitter <- NGramTokenizer(sample, Weka_control(min = 2, max = 2, delimeters = delimiter))
+trigram <- NGramTokenizer(sample, Weka_control(min = 3, max = 3, delimeters = delimiter))
+
+
+
+one_word <- data.frame(table(unigram))
+two_word <- data.frame(table(bigram))
+three_word <- data.frame(table(trigram))
+
+
+sort_one <- one_word[order(one_word$Freq,decreasing=TRUE),]
+colnames(sort_one) <- c("Word", "Freq")
+sort_two <- two_word[order(two_word$Freq,decreasing=TRUE),]
+colnames(sort_two) <- c("Word", "Freq")
+sort_three <- three_word[order(three_word$Freq,decreasing=TRUE),]
+colnames(sort_three) <- c("Word", "Freq")
+
+
+oneFreq <- sort_one[sort_one$Freq>5,]
+twoFreq <- sort_two[sort_two$Freq>5,]
+threeFreq <- sort_three[sort_three$Freq>2,]
