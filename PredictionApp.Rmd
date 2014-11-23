@@ -92,6 +92,10 @@ checkWord <- function(predWord1, predWord2, predWord3) {
         return(predWords)
 }
 
+inputConversion <- function(sent) {
+lastThree <- standardizeWord(tail(strsplit(sent,split=" ")[[1]],3))
+}
+
 twoFreq <- readRDS("data/twoFreq.rds")
 threeFreq <- readRDS("data/threeFreq.rds")
 fourFreq <- readRDS("data/fourFreq.rds")
@@ -99,9 +103,28 @@ noWord <- readRDS("data/noWord.rds")
 ```
 
 ```{r}
-textInput('word1', 'Type in first word:')
-textInput('word2', 'Type in second word:')
-textInput('word3', 'Type in third word:')
+
+
+textInput('sent', 'Type a sentance:')
+
+renderText({
+lastThree <- inputConversion(input$sent)
+paste("First Word Used to Predict is:", lastThree[1])
+})
+
+renderText({
+lastThree <- inputConversion(input$sent)
+paste("Second Word Used to Predict is:", lastThree[2])
+})
+
+renderText({
+lastThree <- inputConversion(input$sent)
+paste("Third Word Used to Predict is:", lastThree[3])
+})
+
+
+
+
 
 ```
 
