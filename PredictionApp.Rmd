@@ -14,42 +14,98 @@ To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authorin
 
 You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
 
-```{r, echo=FALSE}
-inputPanel(
-  selectInput("n_breaks", label = "Number of bins:",
-              choices = c(10, 20, 35, 50), selected = 20),
-  
-  sliderInput("bw_adjust", label = "Bandwidth adjustment:",
-              min = 0.2, max = 2, value = 1, step = 0.2)
-)
+```{r, cache=TRUE, echo=FALSE}
+library(stringr)
 
-renderPlot({
-  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
-       xlab = "Duration (minutes)", main = "Geyser eruption duration")
-  
-  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
-  lines(dens, col = "blue")
-})
+standardizeWord <- function(word) {
+        word <- str_replace_all(word, "=|!|,|/.|-|_|#|?|!|'|:|*", "")
+        word <- tolower(word)
+        return(word)
+}
+
+predictWord <- function(word1, word2="", word3="") {
+        if (word3 == "" & word2 == "") {
+                word1 <- standardizeWord(word1)
+                predDf2 <- twoFreq[with(twoFreq, w1 == word1),]
+                predWord1 <- toString(unlist(predDf2[1,2]))
+                predWord2 <- toString(unlist(predDf2[2,2]))
+                predWord3 <- toString(unlist(predDf2[3,2]))
+        } else if (word3 == "") {
+                word1 <- standardizeWord(word1)
+                word2 <- standardizeWord(word2)
+                predDf2 <- twoFreq[with(twoFreq, w1 == word2),]
+                predDf3 <- threeFreq[with(threeFreq, w1 == word1 & w2 == word2),]
+                predWord1 <- toString(unlist(predDf3[1,3]))
+                predWord2 <- toString(unlist(predDf3[2,3]))
+                predWord3 <- toString(unlist(predDf3[3,3]))
+                if (predWord1 == "NA") {
+                        predWord1 <- toString(unlist(predDf2[1,2]))
+                        predWord2 <- toString(unlist(predDf2[2,2]))
+                        predWord3 <- toString(unlist(predDf2[3,2]))
+                } else if (predWord2 == "NA" & predWord3 == "NA") {
+                        predWord2 <- toString(unlist(predDf2[2,2]))
+                        predWord3 <- toString(unlist(predDf2[3,2]))  
+                } else if (predWord3 == "NA") {
+                        predWord3 <- toString(unlist(predDf2[3,2]))
+                }
+        } else {
+                word1 <- standardizeWord(word1)
+                word2 <- standardizeWord(word2)
+                word3 <- standardizeWord(word3)
+                predDf2 <- twoFreq[with(twoFreq, w1 == word3),]
+                predDf3 <- threeFreq[with(threeFreq, w1 == word2 & w2 == word3),]
+                predDf4 <- fourFreq[with(fourFreq, w1 == word1 & w2 == word2 & w3 ==word3),]
+                predWord1 <- toString(unlist(predDf4[1,4]))
+                predWord2 <- toString(unlist(predDf4[2,4]))
+                predWord3 <- toString(unlist(predDf4[3,4]))
+                if (predWord1 == "NA") {
+                        predWord1 <- toString(unlist(predDf3[1,3]))
+                        predWord2 <- toString(unlist(predDf3[2,3]))
+                        predWord3 <- toString(unlist(predDf3[3,3]))
+                } else if (predWord2 == "NA" & predWord3 == "NA") {
+                        predWord2 <- toString(unlist(predDf3[2,3]))
+                        predWord3 <- toString(unlist(predDf3[3,3]))  
+                } else if (predWord3 == "NA") {
+                        predWord3 <- toString(unlist(predDf3[3,3]))
+                }
+                
+                if (predWord1 == "NA") {
+                        predWord1 <- toString(unlist(predDf2[1,2]))
+                        predWord2 <- toString(unlist(predDf2[2,2]))
+                        predWord3 <- toString(unlist(predDf2[3,2]))
+                } else if (predWord2 == "NA" & predWord3 == "NA") {
+                        predWord2 <- toString(unlist(predDf2[2,2]))
+                        predWord3 <- toString(unlist(predDf2[3,2]))  
+                } else if (predWord3 == "NA") {
+                        predWord3 <- toString(unlist(predDf2[3,2]))
+                }
+        }
+        
+        checkWord(predWord1, predWord2, predWord3)
+}
+
+checkWord <- function(predWord1, predWord2, predWord3) {
+        if (predWord1 == "NA") predWord1 <- noWord[1]
+        if (predWord2 == "NA") predWord2 <- noWord[2]
+        if (predWord3 == "NA") predWord3 <- noWord[3]
+        predWords <- c(predWord1, predWord2, predWord3)
+        return(predWords)
+}
+
+twoFreq <- readRDS("data/twoFreq.rds")
+threeFreq <- readRDS("data/threeFreq.rds")
+fourFreq <- readRDS("data/fourFreq.rds")
+noWord <- readRDS("data/noWord.rds")
 ```
 
-## Embedded Application
+```{r}
+textInput('word1', 'Type in first word:')
+textInput('word2', 'Type in second word:')
+textInput('word3', 'Type in third word:')
 
-It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
-
-```{r, echo=FALSE}
-shinyAppDir(
-  system.file("examples/06_tabsets", package="shiny"),
-  options=list(
-    width="100%", height=550
-  )
-)
 ```
 
-Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.
 
-You can also use the `shinyApp` function to define an application inline rather then in an external directory.
-
-In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
 
 
 
