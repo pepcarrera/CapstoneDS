@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Predicting Words</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Predicting Words">
+  <meta name="author" content="Pep Carrera">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/js/slides" 
+    src="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Predicting Words</h1>
+    <h2>Based on twitter, news, and blog text data</h2>
+    <p>Pep Carrera<br/>Student in Coursera</p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>Introduction &amp; The data</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol>
+<li>Our Application attemptes to predict the next word an will provide 3 possible next words</li>
+<li>We use the data provided by the course, and we focus on the English data set</li>
+<li>We then took a 5% probabilty random sample of twitter data, and 1% for news and blog data to make our corpus</li>
+<li>Key delimeters were removed, but no words were stopped or removed to ensure good prediction</li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>The model</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol>
+<li>1, 2, 3, and 4 gram data sets were created, and were sorted by frequency.</li>
+<li>The n-gram data set was tabled, to get a frequency count</li>
+<li>Each size n-gram was sorted by frequency, and any n-grams that did not have greater than 2 entries were dropped</li>
+<li>For the unigram, only the top three words were kept</li>
+<li>Below you will see the top 2 results of the quadgram</li>
+</ol>
+
+<pre><code class="r">head(fourFreq, 2)
+</code></pre>
+
+<pre><code>##                           w1   w2  w3     w4
+## thanks.for.the.follow thanks  for the follow
+## the.rest.of.the          the rest  of    the
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>Predicting Words</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol>
+<li>The prediction app breaks the phrase into words, and reuses the same word standardizing on the input phrase as was used to proceess the data set. </li>
+<li>Based on the words (up to a max of 3), we match against the frequency sorted n-gram predictor.  If it&#39;s 1 word, it uses the bigram, 2 words, the trigram, and 3 words the quadgram.<br></li>
+<li>The predition app returns the last word in the n-gram set as the predicted word.  It grabs the 3 highest matching n-gram sets for that set of words</li>
+<li>If we get less than 3 predicted words, for each empty predicted word, we use a &#39;back off&#39; approach that simply tries to predict on less input words.  Worst case, we grab the 3 most common words in the entire corpus (these were the top 3 words in the unigram)</li>
+<li>Below if someone typed in a sentane ending with &quot;thanks for the&quot;.  We get 1 hit on the quadgram, and 2 on the trigram, we would return:</li>
+</ol>
+
+<pre><code class="r">predictWord(&quot;thanks&quot;, &quot;for&quot;, &quot;the&quot;)
+</code></pre>
+
+<pre><code>## [1] &quot;follow&quot;  &quot;rt&quot;      &quot;mention&quot;
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>Using the App</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol>
+<li>Check out or app here: <a href="https://pepcarrera.shinyapps.io/predictionApp/PredictionApp.Rmd">https://pepcarrera.shinyapps.io/predictionApp/PredictionApp.Rmd</a></li>
+<li>In the &quot;Type a sentance:&quot; input box, just type in the sentance you want us to use to predict the next word on</li>
+<li>The predictor will always use the last 3 words</li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='Introduction &amp; The data'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='The model'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Predicting Words'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Using the App'>
+         4
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
